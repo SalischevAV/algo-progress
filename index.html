@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Прогресс подготовки</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --page: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --accent: #2a78d6;
+    --accent-soft: #cde2fb;
+    --good: #0ca30c;
+    --border: rgba(11,11,11,0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --accent: #3987e5;
+      --accent-soft: #184f95;
+      --good: #0ca30c;
+      --border: rgba(255,255,255,0.10);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 24px 16px 64px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 24px; }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .stat-tile {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .stat-value {
+    font-size: 1.6rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-label { color: var(--text-secondary); font-size: 0.78rem; margin-top: 2px; }
+  section { margin-bottom: 32px; }
+  h2 { font-size: 1rem; margin: 0 0 12px; color: var(--text-primary); }
+  .heatmap {
+    display: flex;
+    gap: 3px;
+    overflow-x: auto;
+    padding: 4px 0;
+  }
+  .heat-col { display: flex; flex-direction: column; gap: 3px; }
+  .heat-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background: var(--grid);
+  }
+  .heat-cell.heat-filled { background: var(--accent); }
+  .heat-cell.heat-future { background: transparent; }
+  .heatmap-range { color: var(--text-muted); font-size: 0.75rem; margin-top: 6px; }
+  .level {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+  }
+  .level summary {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    list-style: none;
+  }
+  .level summary::-webkit-details-marker { display: none; }
+  .level-num { color: var(--text-muted); font-size: 0.8rem; white-space: nowrap; }
+  .level-title { font-weight: 600; }
+  .level-meta { margin-left: auto; color: var(--text-muted); font-size: 0.78rem; }
+  .badge {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+  }
+  .status-done { color: var(--good); border-color: var(--good); }
+  .status-progress { color: var(--accent); border-color: var(--accent); }
+  .status-todo { color: var(--text-muted); }
+  .bar {
+    height: 6px;
+    background: var(--grid);
+    border-radius: 999px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+  .task-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 0.85rem;
+  }
+  .task-table th {
+    text-align: left;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid var(--grid);
+    padding: 6px 8px;
+  }
+  .task-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--grid);
+  }
+  .task-table td.center { text-align: center; color: var(--text-muted); width: 90px; }
+  .task-table td.center.ok { color: var(--good); font-weight: 600; }
+  .task-table a { color: var(--text-primary); text-decoration: none; }
+  .task-table a:hover { color: var(--accent); text-decoration: underline; }
+  .task-extra { color: var(--text-muted); font-size: 0.78rem; }
+  footer { color: var(--text-muted); font-size: 0.75rem; margin-top: 40px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Прогресс подготовки к алгоритмическим интервью</h1>
+  <div class="subtitle">Сгенерировано 2026-09-07 18:39 из plan.md и report.md — перегенерировать: <code>python3 scripts/generate_progress.py</code></div>
+
+  <div class="stats">
+    <div class="stat-tile"><div class="stat-value">6</div><div class="stat-label">Сессий проведено</div></div>
+    <div class="stat-tile"><div class="stat-value">4/83</div><div class="stat-label">Задач решено локально</div></div>
+    <div class="stat-tile"><div class="stat-value">0/83</div><div class="stat-label">Задач решено на LeetCode</div></div>
+    <div class="stat-tile"><div class="stat-value">9/106</div><div class="stat-label">Подтем пройдено</div></div>
+    <div class="stat-tile"><div class="stat-value">2026-09-07</div><div class="stat-label">Последняя сессия</div></div>
+  </div>
+
+  <section>
+    <h2>Календарь сессий</h2>
+    <div class="heatmap"><div class="heat-col"><div class="heat-cell" title="2026-06-01"></div><div class="heat-cell" title="2026-06-02"></div><div class="heat-cell" title="2026-06-03"></div><div class="heat-cell" title="2026-06-04"></div><div class="heat-cell" title="2026-06-05"></div><div class="heat-cell" title="2026-06-06"></div><div class="heat-cell" title="2026-06-07"></div></div><div class="heat-col"><div class="heat-cell" title="2026-06-08"></div><div class="heat-cell" title="2026-06-09"></div><div class="heat-cell" title="2026-06-10"></div><div class="heat-cell" title="2026-06-11"></div><div class="heat-cell" title="2026-06-12"></div><div class="heat-cell" title="2026-06-13"></div><div class="heat-cell" title="2026-06-14"></div></div><div class="heat-col"><div class="heat-cell" title="2026-06-15"></div><div class="heat-cell" title="2026-06-16"></div><div class="heat-cell" title="2026-06-17"></div><div class="heat-cell" title="2026-06-18"></div><div class="heat-cell" title="2026-06-19"></div><div class="heat-cell" title="2026-06-20"></div><div class="heat-cell" title="2026-06-21"></div></div><div class="heat-col"><div class="heat-cell" title="2026-06-22"></div><div class="heat-cell" title="2026-06-23"></div><div class="heat-cell" title="2026-06-24"></div><div class="heat-cell" title="2026-06-25"></div><div class="heat-cell" title="2026-06-26"></div><div class="heat-cell" title="2026-06-27"></div><div class="heat-cell" title="2026-06-28"></div></div><div class="heat-col"><div class="heat-cell" title="2026-06-29"></div><div class="heat-cell" title="2026-06-30"></div><div class="heat-cell" title="2026-07-01"></div><div class="heat-cell" title="2026-07-02"></div><div class="heat-cell" title="2026-07-03"></div><div class="heat-cell" title="2026-07-04"></div><div class="heat-cell" title="2026-07-05"></div></div><div class="heat-col"><div class="heat-cell" title="2026-07-06"></div><div class="heat-cell" title="2026-07-07"></div><div class="heat-cell" title="2026-07-08"></div><div class="heat-cell" title="2026-07-09"></div><div class="heat-cell" title="2026-07-10"></div><div class="heat-cell" title="2026-07-11"></div><div class="heat-cell" title="2026-07-12"></div></div><div class="heat-col"><div class="heat-cell" title="2026-07-13"></div><div class="heat-cell" title="2026-07-14"></div><div class="heat-cell" title="2026-07-15"></div><div class="heat-cell" title="2026-07-16"></div><div class="heat-cell" title="2026-07-17"></div><div class="heat-cell" title="2026-07-18"></div><div class="heat-cell" title="2026-07-19"></div></div><div class="heat-col"><div class="heat-cell" title="2026-07-20"></div><div class="heat-cell" title="2026-07-21"></div><div class="heat-cell" title="2026-07-22"></div><div class="heat-cell" title="2026-07-23"></div><div class="heat-cell" title="2026-07-24"></div><div class="heat-cell" title="2026-07-25"></div><div class="heat-cell" title="2026-07-26"></div></div><div class="heat-col"><div class="heat-cell" title="2026-07-27"></div><div class="heat-cell" title="2026-07-28"></div><div class="heat-cell" title="2026-07-29"></div><div class="heat-cell" title="2026-07-30"></div><div class="heat-cell" title="2026-07-31"></div><div class="heat-cell" title="2026-08-01"></div><div class="heat-cell" title="2026-08-02"></div></div><div class="heat-col"><div class="heat-cell" title="2026-08-03"></div><div class="heat-cell heat-filled" title="2026-08-04 — сессия"></div><div class="heat-cell" title="2026-08-05"></div><div class="heat-cell heat-filled" title="2026-08-06 — сессия"></div><div class="heat-cell" title="2026-08-07"></div><div class="heat-cell" title="2026-08-08"></div><div class="heat-cell" title="2026-08-09"></div></div><div class="heat-col"><div class="heat-cell" title="2026-08-10"></div><div class="heat-cell" title="2026-08-11"></div><div class="heat-cell" title="2026-08-12"></div><div class="heat-cell" title="2026-08-13"></div><div class="heat-cell" title="2026-08-14"></div><div class="heat-cell" title="2026-08-15"></div><div class="heat-cell" title="2026-08-16"></div></div><div class="heat-col"><div class="heat-cell heat-filled" title="2026-08-17 — сессия"></div><div class="heat-cell heat-filled" title="2026-08-18 — сессия"></div><div class="heat-cell heat-filled" title="2026-08-19 — сессия"></div><div class="heat-cell" title="2026-08-20"></div><div class="heat-cell" title="2026-08-21"></div><div class="heat-cell" title="2026-08-22"></div><div class="heat-cell" title="2026-08-23"></div></div><div class="heat-col"><div class="heat-cell" title="2026-08-24"></div><div class="heat-cell" title="2026-08-25"></div><div class="heat-cell" title="2026-08-26"></div><div class="heat-cell" title="2026-08-27"></div><div class="heat-cell" title="2026-08-28"></div><div class="heat-cell" title="2026-08-29"></div><div class="heat-cell" title="2026-08-30"></div></div><div class="heat-col"><div class="heat-cell" title="2026-08-31"></div><div class="heat-cell" title="2026-09-01"></div><div class="heat-cell" title="2026-09-02"></div><div class="heat-cell" title="2026-09-03"></div><div class="heat-cell" title="2026-09-04"></div><div class="heat-cell" title="2026-09-05"></div><div class="heat-cell" title="2026-09-06"></div></div><div class="heat-col"><div class="heat-cell heat-filled" title="2026-09-07 — сессия"></div><div class="heat-cell heat-future" title="2026-09-08"></div><div class="heat-cell heat-future" title="2026-09-09"></div><div class="heat-cell heat-future" title="2026-09-10"></div><div class="heat-cell heat-future" title="2026-09-11"></div><div class="heat-cell heat-future" title="2026-09-12"></div><div class="heat-cell heat-future" title="2026-09-13"></div></div></div>
+    <div class="heatmap-range">2026-06-01 — 2026-09-07</div>
+  </section>
+
+  <section>
+    <h2>Уровни и задачи</h2>
+    
+        <details class="level" open>
+          <summary>
+            <span class="level-num">Уровень 0</span>
+            <span class="level-title">База процесса</span>
+            <span class="badge status-progress">в процессе.</span>
+            <span class="level-meta">подтемы 5/6</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:83%"></div></div>
+          
+        </details>
+        <details class="level" open>
+          <summary>
+            <span class="level-num">Уровень 1</span>
+            <span class="level-title">Линейный проход и массивы</span>
+            <span class="badge status-progress">в процессе.</span>
+            <span class="level-meta">подтемы 4/7 · задачи 3/5</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:57%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/two-sum/" target="_blank" rel="noopener">Two Sum</a></td>
+              <td class="center ok">✓</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/best-time-to-buy-and-sell-stock/" target="_blank" rel="noopener">Best Time to Buy and Sell Stock</a></td>
+              <td class="center ok">✓</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/maximum-subarray/" target="_blank" rel="noopener">Maximum Subarray</a></td>
+              <td class="center ok">✓</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/product-of-array-except-self/" target="_blank" rel="noopener">Product of Array Except Self</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/merge-sorted-array/" target="_blank" rel="noopener">Merge Sorted Array</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 2</span>
+            <span class="level-title">Два указателя и sliding window</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/6 · задачи 0/6</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/valid-palindrome/" target="_blank" rel="noopener">Valid Palindrome</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/container-with-most-water/" target="_blank" rel="noopener">Container With Most Water</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/3sum/" target="_blank" rel="noopener">3Sum</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/longest-substring-without-repeating-characters/" target="_blank" rel="noopener">Longest Substring Without Repeating Characters</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/minimum-size-subarray-sum/" target="_blank" rel="noopener">Minimum Size Subarray Sum</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/permutation-in-string/" target="_blank" rel="noopener">Permutation in String</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 3</span>
+            <span class="level-title">HashMap, HashSet и частоты</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/6 · задачи 0/5</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/contains-duplicate/" target="_blank" rel="noopener">Contains Duplicate</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/group-anagrams/" target="_blank" rel="noopener">Group Anagrams</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/top-k-frequent-elements/" target="_blank" rel="noopener">Top K Frequent Elements</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/longest-consecutive-sequence/" target="_blank" rel="noopener">Longest Consecutive Sequence</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/subarray-sum-equals-k/" target="_blank" rel="noopener">Subarray Sum Equals K</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 4</span>
+            <span class="level-title">Binary search</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/6 · задачи 0/6</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/binary-search/" target="_blank" rel="noopener">Binary Search</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/search-insert-position/" target="_blank" rel="noopener">Search Insert Position</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/search-in-rotated-sorted-array/" target="_blank" rel="noopener">Search in Rotated Sorted Array</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/" target="_blank" rel="noopener">Find Minimum in Rotated Sorted Array</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/koko-eating-bananas/" target="_blank" rel="noopener">Koko Eating Bananas</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/" target="_blank" rel="noopener">Capacity To Ship Packages Within D Days</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 5</span>
+            <span class="level-title">Stack, queue и монотонные структуры</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/6 · задачи 0/6</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/valid-parentheses/" target="_blank" rel="noopener">Valid Parentheses</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/min-stack/" target="_blank" rel="noopener">Min Stack</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/daily-temperatures/" target="_blank" rel="noopener">Daily Temperatures</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/asteroid-collision/" target="_blank" rel="noopener">Asteroid Collision</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/largest-rectangle-in-histogram/" target="_blank" rel="noopener">Largest Rectangle in Histogram</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/sliding-window-maximum/" target="_blank" rel="noopener">Sliding Window Maximum</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 6</span>
+            <span class="level-title">Linked list</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/7 · задачи 0/5</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/reverse-linked-list/" target="_blank" rel="noopener">Reverse Linked List</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/merge-two-sorted-lists/" target="_blank" rel="noopener">Merge Two Sorted Lists</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/linked-list-cycle/" target="_blank" rel="noopener">Linked List Cycle</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/remove-nth-node-from-end-of-list/" target="_blank" rel="noopener">Remove Nth Node From End of List</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/reorder-list/" target="_blank" rel="noopener">Reorder List</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 7</span>
+            <span class="level-title">Recursion и backtracking</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/8 · задачи 0/6</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/subsets/" target="_blank" rel="noopener">Subsets</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/permutations/" target="_blank" rel="noopener">Permutations</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/combination-sum/" target="_blank" rel="noopener">Combination Sum</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/letter-combinations-of-a-phone-number/" target="_blank" rel="noopener">Letter Combinations of a Phone Number</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/generate-parentheses/" target="_blank" rel="noopener">Generate Parentheses</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/word-search/" target="_blank" rel="noopener">Word Search</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 8</span>
+            <span class="level-title">Trees и BST</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/7 · задачи 0/7</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/maximum-depth-of-binary-tree/" target="_blank" rel="noopener">Maximum Depth of Binary Tree</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/same-tree/" target="_blank" rel="noopener">Same Tree</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/invert-binary-tree/" target="_blank" rel="noopener">Invert Binary Tree</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/binary-tree-level-order-traversal/" target="_blank" rel="noopener">Binary Tree Level Order Traversal</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/validate-binary-search-tree/" target="_blank" rel="noopener">Validate Binary Search Tree</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/" target="_blank" rel="noopener">Lowest Common Ancestor of a BST</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/binary-tree-maximum-path-sum/" target="_blank" rel="noopener">Binary Tree Maximum Path Sum</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 9</span>
+            <span class="level-title">Heap и priority queue</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/5 · задачи 0/5</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/kth-largest-element-in-an-array/" target="_blank" rel="noopener">Kth Largest Element in an Array</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/last-stone-weight/" target="_blank" rel="noopener">Last Stone Weight</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/k-closest-points-to-origin/" target="_blank" rel="noopener">K Closest Points to Origin</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/merge-k-sorted-lists/" target="_blank" rel="noopener">Merge K Sorted Lists</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/find-median-from-data-stream/" target="_blank" rel="noopener">Find Median from Data Stream</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 10</span>
+            <span class="level-title">Graphs</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/9 · задачи 0/7</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/number-of-islands/" target="_blank" rel="noopener">Number of Islands</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/clone-graph/" target="_blank" rel="noopener">Clone Graph</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/rotting-oranges/" target="_blank" rel="noopener">Rotting Oranges</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/course-schedule/" target="_blank" rel="noopener">Course Schedule</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/pacific-atlantic-water-flow/" target="_blank" rel="noopener">Pacific Atlantic Water Flow</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/redundant-connection/" target="_blank" rel="noopener">Redundant Connection</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/network-delay-time/" target="_blank" rel="noopener">Network Delay Time</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 11</span>
+            <span class="level-title">Greedy</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/5 · задачи 1/7</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/maximum-subarray/" target="_blank" rel="noopener">Maximum Subarray</a> <span class="task-extra">как greedy view</span></td>
+              <td class="center ok">✓</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/jump-game/" target="_blank" rel="noopener">Jump Game</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/jump-game-ii/" target="_blank" rel="noopener">Jump Game II</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/gas-station/" target="_blank" rel="noopener">Gas Station</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/non-overlapping-intervals/" target="_blank" rel="noopener">Non-overlapping Intervals</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/merge-intervals/" target="_blank" rel="noopener">Merge Intervals</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/insert-interval/" target="_blank" rel="noopener">Insert Interval</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 12</span>
+            <span class="level-title">Dynamic programming, база</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/7 · задачи 0/6</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/climbing-stairs/" target="_blank" rel="noopener">Climbing Stairs</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/house-robber/" target="_blank" rel="noopener">House Robber</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/min-cost-climbing-stairs/" target="_blank" rel="noopener">Min Cost Climbing Stairs</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/coin-change/" target="_blank" rel="noopener">Coin Change</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/decode-ways/" target="_blank" rel="noopener">Decode Ways</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/word-break/" target="_blank" rel="noopener">Word Break</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 13</span>
+            <span class="level-title">Dynamic programming, продвинутый уровень</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/7 · задачи 0/6</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/unique-paths/" target="_blank" rel="noopener">Unique Paths</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/longest-common-subsequence/" target="_blank" rel="noopener">Longest Common Subsequence</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/longest-increasing-subsequence/" target="_blank" rel="noopener">Longest Increasing Subsequence</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/partition-equal-subset-sum/" target="_blank" rel="noopener">Partition Equal Subset Sum</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/edit-distance/" target="_blank" rel="noopener">Edit Distance</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/burst-balloons/" target="_blank" rel="noopener">Burst Balloons</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 14</span>
+            <span class="level-title">Продвинутые структуры и техники</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/7 · задачи 0/6</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+            <table class="task-table">
+              <thead><tr><th>Задача</th><th>Локально</th><th>LeetCode</th></tr></thead>
+              <tbody>
+            <tr>
+              <td><a href="https://leetcode.com/problems/implement-trie-prefix-tree/" target="_blank" rel="noopener">Implement Trie</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/word-search-ii/" target="_blank" rel="noopener">Word Search II</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/range-sum-query-mutable/" target="_blank" rel="noopener">Range Sum Query - Mutable</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/count-of-smaller-numbers-after-self/" target="_blank" rel="noopener">Count of Smaller Numbers After Self</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/single-number/" target="_blank" rel="noopener">Single Number</a></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr>
+            <tr>
+              <td><a href="https://leetcode.com/problems/subsets-ii/" target="_blank" rel="noopener">Subsets II</a> <span class="task-extra">как bitmask-вариант</span></td>
+              <td class="center ">—</td>
+              <td class="center ">—</td>
+            </tr></tbody>
+            </table>
+        </details>
+        <details class="level" >
+          <summary>
+            <span class="level-num">Уровень 15</span>
+            <span class="level-title">Interview practice</span>
+            <span class="badge status-todo">не начато.</span>
+            <span class="level-meta">подтемы 0/7</span>
+          </summary>
+          <div class="bar"><div class="bar-fill" style="width:0%"></div></div>
+          
+        </details>
+  </section>
+
+  <footer>Файл сгенерирован локально, ничего не отправляется на внешние серверы. Статус LeetCode нужно обновлять вручную в plan.md по мере решения задач на сайте.</footer>
+</div>
+</body>
+</html>
